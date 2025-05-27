@@ -258,7 +258,7 @@ class RecipeApp:
         
         tk.Label(self.content_frame, text="Weekly Meal Plan", font=self.styles.title_font).pack(pady=10)
         
-        # Search and add meal section
+       
         search_frame = tk.Frame(self.content_frame)
         search_frame.pack(fill=tk.X, pady=10)
         
@@ -275,7 +275,7 @@ class RecipeApp:
         
         self.meal_search_entry.bind('<Return>', lambda e: self.search_meal_for_plan())
         
-        # Meal plan display (7 days)
+     
         self.meal_plan_frame = tk.Frame(self.content_frame)
         self.meal_plan_frame.pack(fill=tk.BOTH, expand=True)
         
@@ -283,7 +283,7 @@ class RecipeApp:
         self.day_frames = {}
         self.day_meals = {}
         
-        # Load saved meal plan from database
+       
         self.weekly_meals = self.db.get_meal_plan(str(self.current_user['_id']))
         
         for i, day in enumerate(days):
@@ -294,7 +294,7 @@ class RecipeApp:
             
             tk.Label(day_frame, text=day, font=self.styles.header_font).pack()
             
-            # Check if we have a saved meal for this day
+           
             if day in self.weekly_meals:
                 recipe = self.weekly_meals[day]
                 meal_text = f"{recipe['title']}\n{recipe.get('readyInMinutes', 'N/A')} min"
@@ -314,7 +314,7 @@ class RecipeApp:
             
             self.day_frames[day] = day_frame
         
-        # Nutrition summary
+       
         self.nutrition_frame = tk.Frame(self.content_frame)
         self.nutrition_frame.pack(fill=tk.X, pady=10)
         
@@ -392,18 +392,18 @@ class RecipeApp:
         meal_label.bind("<Button-1>", lambda e, r=recipe: self.show_recipe_details(r['id']))
         meal_label.pack()
         
-        # Remove the old label if it exists
+       
         if day in self.day_meals:
             self.day_meals[day].destroy()
         self.day_meals[day] = meal_label
         
-        # Save to database
+      
         self.db.save_meal_plan(str(self.current_user['_id']), day, recipe)
         
-        # Update weekly meals
+        
         self.weekly_meals[day] = recipe
         
-        # Calculate total calories
+        
         self.calculate_weekly_nutrition()
         popup.destroy()
 
@@ -433,7 +433,7 @@ class RecipeApp:
             tk.Label(self.content_frame, text="No favorites yet.", **self.styles.label_style).pack(pady=20)
             return
         
-        # Create a dedicated frame for results
+        
         self.favorites_results_frame = tk.Frame(self.content_frame)
         self.favorites_results_frame.pack(fill=tk.BOTH, expand=True)
         
@@ -459,16 +459,16 @@ class RecipeApp:
                 button.pack(anchor="nw", padx=10, pady=10)
     
     def _display_scrollable_results(self, items, is_favorite=False, is_meal_plan=False, container=None):
-        # Use provided container or default to content_frame
+        
         container = container or (self.results_frame if hasattr(self, 'results_frame') else self.content_frame)
         
-        # Safely destroy all children widgets
+        
         try:
             for widget in container.winfo_children():
                 widget.destroy()
         except tk.TclError as e:
             print(f"DEBUG: Error clearing container: {e}")
-            # If there's an error, create a new container
+            
             container = tk.Frame(self.content_frame)
             container.pack(fill=tk.BOTH, expand=True)
         
@@ -603,24 +603,24 @@ class RecipeApp:
         
         tab_control = ttk.Notebook(details_frame)
         
-        # Ingredients Tab
+        
         ingredients_tab = tk.Frame(tab_control)
         self._create_ingredients_tab(ingredients_tab, recipe)
         tab_control.add(ingredients_tab, text='Ingredients')
         
-        # Instructions Tab
+        
         instructions_tab = tk.Frame(tab_control)
         self._create_instructions_tab(instructions_tab, recipe)
         tab_control.add(instructions_tab, text='Instructions')
         
-        # Nutrition Tab
+       
         nutrition_tab = tk.Frame(tab_control)
         self._create_nutrition_tab(nutrition_tab, recipe)
         tab_control.add(nutrition_tab, text='Nutrition')
         
         tab_control.pack(expand=1, fill="both", padx=5, pady=5)
         
-        # Favorite Button
+       
         action_frame = tk.Frame(details_frame)
         action_frame.pack(pady=10)
         
@@ -759,7 +759,7 @@ class RecipeApp:
             messagebox.showerror("Error", "Login required")
             return
         
-        # Ensure we have a valid recipe ID
+        
         recipe_id = str(recipe.get('id', recipe.get('recipe_id')))
         if not recipe_id:
             messagebox.showerror("Error", "Invalid recipe")
@@ -767,7 +767,7 @@ class RecipeApp:
         
         if self.db.add_favorite(str(self.current_user['_id']), recipe):
             messagebox.showinfo("Success", "Added to favorites")
-            # Refresh if we're on the favorites page
+            
             if len(self.nav_history) > 0 and self.nav_history[-1][0] == 'favorites':
                 self.show_favorites_page()
         else:
@@ -778,10 +778,10 @@ class RecipeApp:
             messagebox.showerror("Error", "Login required")
             return
         
-        recipe_id = str(recipe_id)  # Ensure it's a string
+        recipe_id = str(recipe_id)  
         if self.db.remove_favorite(str(self.current_user['_id']), recipe_id):
             messagebox.showinfo("Success", "Removed from favorites")
-            # Refresh if we're on the favorites page or recipe details page
+            
             if len(self.nav_history) > 0:
                 if self.nav_history[-1][0] == 'favorites':
                     self.show_favorites_page()
@@ -794,10 +794,10 @@ class RecipeApp:
         if len(self.nav_history) <= 1:
             return
         
-        # Remove current page from history
+       
         self.nav_history.pop()
         
-        # Get the previous page
+       
         page_type, *args = self.nav_history[-1]
         
         if page_type == 'home':
