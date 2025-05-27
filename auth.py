@@ -9,7 +9,6 @@ class AuthFrame(Frame):
         
         self.current_user = None
         
-        # Create widgets
         self.create_widgets()
         self.show_login()
     

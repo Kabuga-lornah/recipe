@@ -133,7 +133,14 @@ class RecipeApp:
         
         for i, feature in enumerate(features):
             row, col = divmod(i, 3)
-            card = tk.Frame(cards_frame, bg="white", bd=1, relief=tk.RAISED, padx=20, pady=20)
+            card = tk.Frame(
+                cards_frame,
+                bg="white",
+                bd=1,
+                relief=tk.RAISED,
+                padx=20,
+                pady=20
+            )
             card.grid(row=row, column=col, padx=10, pady=10, sticky="nsew")
             cards_frame.grid_columnconfigure(col, weight=1)
             cards_frame.grid_rowconfigure(row, weight=1)
@@ -426,7 +433,15 @@ class RecipeApp:
             tk.Label(self.content_frame, text="No favorites yet.", **self.styles.label_style).pack(pady=20)
             return
         
-        self._display_scrollable_results(favorites, is_favorite=True)
+        # Create a dedicated frame for results
+        self.favorites_results_frame = tk.Frame(self.content_frame)
+        self.favorites_results_frame.pack(fill=tk.BOTH, expand=True)
+        
+        print(f"DEBUG: Found {len(favorites)} favorites")
+        for fav in favorites:
+            print(f"DEBUG: Favorite recipe: {fav.get('title', 'No title')} - ID: {fav.get('id', 'No ID')}")
+        
+        self._display_scrollable_results(favorites, is_favorite=True, container=self.favorites_results_frame)
         
         self._add_back_button(bottom=True)
     
@@ -443,11 +458,20 @@ class RecipeApp:
             else:
                 button.pack(anchor="nw", padx=10, pady=10)
     
-    def _display_scrollable_results(self, items, is_favorite=False, is_meal_plan=False):
-        container = self.results_frame if hasattr(self, 'results_frame') else self.content_frame
-        for widget in container.winfo_children():
-            widget.destroy()
-    
+    def _display_scrollable_results(self, items, is_favorite=False, is_meal_plan=False, container=None):
+        # Use provided container or default to content_frame
+        container = container or (self.results_frame if hasattr(self, 'results_frame') else self.content_frame)
+        
+        # Safely destroy all children widgets
+        try:
+            for widget in container.winfo_children():
+                widget.destroy()
+        except tk.TclError as e:
+            print(f"DEBUG: Error clearing container: {e}")
+            # If there's an error, create a new container
+            container = tk.Frame(self.content_frame)
+            container.pack(fill=tk.BOTH, expand=True)
+        
         canvas = tk.Canvas(container)
         scrollbar = ttk.Scrollbar(container, orient="vertical", command=canvas.yview)
         scrollable_frame = tk.Frame(canvas)
@@ -465,21 +489,12 @@ class RecipeApp:
         recipes_frame = tk.Frame(scrollable_frame)
         recipes_frame.pack(fill="both", expand=True, padx=10, pady=10)
     
-        if is_meal_plan:
-            for day, meals in items:
-                tk.Label(recipes_frame, text=f"{day.capitalize()}:", font=self.styles.header_font).pack(anchor="w", pady=(10,5))
-                for meal in meals:
-                    meal_frame = tk.Frame(recipes_frame)
-                    meal_frame.pack(fill=tk.X, pady=5)
-                    tk.Label(meal_frame, text=f"{meal['slot']}: {meal['value']}").pack(side=tk.LEFT)
-                    tk.Button(
-                        meal_frame,
-                        text="View Recipe",
-                        command=lambda id=meal['id']: self.show_recipe_details(id),
-                        **self.styles.button_style
-                    ).pack(side=tk.RIGHT)
-        else:
+        print(f"DEBUG: Displaying {len(items)} items, is_favorite={is_favorite}")
+    
+        if not is_meal_plan:
             for i, item in enumerate(items):
+                print(f"DEBUG: Processing item {i}: {item.get('title', 'No title')}")
+                
                 row, col = divmod(i, 3)
                 card = tk.Frame(
                     recipes_frame,
@@ -493,9 +508,10 @@ class RecipeApp:
                 recipes_frame.grid_columnconfigure(col, weight=1)
                 recipes_frame.grid_rowconfigure(row, weight=1)
             
+                title_text = item.get('title', 'Untitled Recipe')
                 tk.Label(
                     card,
-                    text=item.get('title', 'Untitled Recipe'),
+                    text=title_text,
                     font=self.styles.header_font,
                     wraplength=200,
                     bg="white"
@@ -510,7 +526,8 @@ class RecipeApp:
                         label = tk.Label(card, image=photo, bg="white")
                         label.image = photo
                         label.pack(pady=5)
-                    except Exception:
+                    except Exception as e:
+                        print(f"DEBUG: Error loading image: {e}")
                         pass
             
                 info_frame = tk.Frame(card, bg="white")
@@ -531,10 +548,13 @@ class RecipeApp:
                 btn_frame = tk.Frame(card, bg="white")
                 btn_frame.pack(fill="x", pady=(5, 0))
             
+                recipe_id = item.get('id') or item.get('recipe_id')
+                print(f"DEBUG: Recipe ID for view button: {recipe_id}")
+                
                 tk.Button(
                     btn_frame,
                     text="View",
-                    command=lambda r=item: self.show_recipe_details(r['id']),
+                    command=lambda r=item: self.show_recipe_details(r.get('id') or r.get('recipe_id')),
                     **{**self.styles.button_style, 'font': self.styles.small_font}
                 ).pack(side="left", expand=True, fill="x", padx=2)
             
@@ -542,7 +562,7 @@ class RecipeApp:
                     tk.Button(
                         btn_frame,
                         text="Remove",
-                        command=lambda r=item: self.remove_from_favorites(r['id']),
+                        command=lambda r=item: self.remove_from_favorites(r.get('id') or r.get('recipe_id')),
                         **{**self.styles.button_style, 'bg': self.styles.error_color, 'font': self.styles.small_font}
                     ).pack(side="left", expand=True, fill="x", padx=2)
                 else:
@@ -556,6 +576,8 @@ class RecipeApp:
     def show_recipe_details(self, recipe_id):
         self.clear_content()
         self.nav_history.append(('recipe_details', recipe_id))
+        
+        print(f"DEBUG: Loading recipe details for ID: {recipe_id}")
         
         recipe = self.api.get_recipe_details(recipe_id)
         if not recipe:
