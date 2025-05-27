@@ -43,8 +43,8 @@ class RecipeAPI:
         url = f"{self.base_url}/recipes/findByIngredients"
         params = {
             'apiKey': self.api_key,
-            'ingredients': ','.join(ingredients),
-            'number': 5,
+            'ingredients': ingredients,  # Expecting a comma-separated string
+            'number': 10,  # Increased from 5 to get more results
             'ignorePantry': True,
             'ranking': 1
         }
@@ -52,12 +52,17 @@ class RecipeAPI:
             response = requests.get(url, params=params)
             response.raise_for_status()
             recipes = response.json()
-            # Get detailed information for each recipe
+        
+        # Debug print to see what we're getting
+            print(f"Found {len(recipes)} recipes for ingredients: {ingredients}")
+        
+        # Get detailed information for each recipe
             detailed_recipes = []
             for recipe in recipes:
                 details = self.get_recipe_details(recipe['id'])
                 if details:
                     detailed_recipes.append(details)
+        
             return detailed_recipes
         except requests.RequestException as e:
             print(f"Error finding recipes by ingredients: {e}")
