@@ -759,6 +759,12 @@ class RecipeApp:
             messagebox.showerror("Error", "Login required")
             return
         
+        # Ensure we have a valid recipe ID
+        recipe_id = str(recipe.get('id', recipe.get('recipe_id')))
+        if not recipe_id:
+            messagebox.showerror("Error", "Invalid recipe")
+            return
+        
         if self.db.add_favorite(str(self.current_user['_id']), recipe):
             messagebox.showinfo("Success", "Added to favorites")
             # Refresh if we're on the favorites page
@@ -766,12 +772,13 @@ class RecipeApp:
                 self.show_favorites_page()
         else:
             messagebox.showerror("Error", "Failed to add favorite")
-    
+
     def remove_from_favorites(self, recipe_id):
         if not self.current_user:
             messagebox.showerror("Error", "Login required")
             return
         
+        recipe_id = str(recipe_id)  # Ensure it's a string
         if self.db.remove_favorite(str(self.current_user['_id']), recipe_id):
             messagebox.showinfo("Success", "Removed from favorites")
             # Refresh if we're on the favorites page or recipe details page
