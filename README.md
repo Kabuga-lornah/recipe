@@ -110,12 +110,3 @@ The Recipe Management System is a desktop application built using Python's Tkint
 7.  **Recipe Details**: Click on a recipe to view its ingredients, instructions (with text-to-speech option), and nutrition information.
 8.  **Logout**: Log out from the profile menu.
 
----
-
-## Contributing
-Contributions are welcome! Please feel free to fork the repository, make improvements, and submit pull requests.
-
----
-
-## License
-This project is open-source and available under the [MIT License](https://opensource.org/licenses/MIT).
